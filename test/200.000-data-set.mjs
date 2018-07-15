@@ -8,9 +8,6 @@ import log from 'ee-log';
 
 
 
-const host = 'http://l.dns.porn:8000';
-
-
 
 section('Data Set', (section) => {
 
@@ -19,15 +16,21 @@ section('Data Set', (section) => {
     });
 
 
-    section.test('Initiailze', async() => {
+    section.test('Initialize', async() => {
         const dataSet = new DataSet();
         dataSet.initialize();
     });
 
 
+    section.test('prepare for data', async() => {
+        const dataSet = new DataSet();
+        dataSet.prepareForData();
+    });
+
+
     section.test('Add values', async() => {
         const dataSet = new DataSet();
-        dataSet.initialize();
+        dataSet.prepareForData();
         dataSet.addValues([{
             test: 189
         }]);
@@ -36,7 +39,7 @@ section('Data Set', (section) => {
 
     section.test('Discard set', async() => {
         const dataSet = new DataSet();
-        dataSet.initialize();
+        dataSet.prepareForData();
         dataSet.discard()
         assert(dataSet.hasEnded())
     });
@@ -44,7 +47,7 @@ section('Data Set', (section) => {
 
     section.test('Fail set', async() => {
         const dataSet = new DataSet();
-        dataSet.initialize();
+        dataSet.prepareForData();
         dataSet.fail()
         assert(dataSet.hasEnded())
     });

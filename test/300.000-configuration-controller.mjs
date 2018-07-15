@@ -2,14 +2,18 @@
 
 import Service from '../index.mjs';
 import section from 'section-tests';
-import request from 'superagent';
+import superagent from 'superagent';
 import assert from 'assert';
 import log from 'ee-log';
 import {ServiceManager} from 'rda-service';
 
 
 
-section('RDA Compute Service', (section) => {
+const host = 'http://l.dns.porn';
+
+
+
+section('Configuration Controller', (section) => {
     let sm;
 
     section.setup(async() => {
@@ -22,10 +26,15 @@ section('RDA Compute Service', (section) => {
 
 
 
-    section.test('Start & stop service', async() => {
+
+    section.test('Set configuration', async() => {
         const service = new Service();
         await service.load();
-        
+
+        await superagent.post(`${host}:${service.getPort()}/rda-compute.configuration`).ok(res => res.status === 201).send({
+            name: 'test'
+        });
+
         await section.wait(200);
         await service.end();
     });

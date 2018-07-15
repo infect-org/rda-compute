@@ -13,6 +13,7 @@ const log = logd.module('rda-compute-dataset');
 
 const statusMap = new Map([
     ['initialized', 100],
+    ['configuring', 150],
     ['loading', 200],
     ['ready', 300],
     ['discarded', 1000],
@@ -26,14 +27,10 @@ export default class DataSet {
 
 
     constructor({
-        sourceService = 'default',
-        versions = [],
-        setName = 'deafult',
+        setName = 'default',
         minFreeMemory = 10,
     } = {}) {
         this.setName = setName;
-        this.versions = versions;
-        this.sourceService = sourceService;
 
         // the amount of memory that must be available
         // in order to assume the process is healthy and
@@ -74,14 +71,25 @@ export default class DataSet {
 
 
     /**
-    * set up the data set, make it for accepting values
+    * status change to initializing, indicates that
+    * the data source is preparing the shards
     */
     initialize() {
+        this.setStatus('configuring');
+    }
+
+
+
+    /**
+    * set up the data set, make it for accepting values
+    */
+    prepareForData() {
         this.setStatus('loading');
 
         // the values of the dataset
         this.values = [];
     }
+
 
 
 
@@ -100,7 +108,8 @@ export default class DataSet {
     /**
     * kill the set, remove all data
     */
-    fail() {
+    fail(err) {
+        this.err = err;
         this.discard();
         this.setStatus('failed');
     }

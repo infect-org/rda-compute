@@ -7,7 +7,7 @@
     "test": "test"
   },
   "scripts": {
-    "test": "node --experimental-modules ./node_modules/.bin/section ./test/*.mjs --dev --subenv-testing --log-level=0+ --log-module=*"
+    "test": "node --experimental-modules --no-warnings ./node_modules/.bin/section ./test/*.mjs --dev --subenv-testing --log-level=error+ --log-module=*"
   },
   "repository": {
     "type": "git",
@@ -24,15 +24,14 @@
   },
   "homepage": "https://github.com/infect-org/rda-compute-service#readme",
   "devDependencies": {
-    "section-tests": "^2.1.0",
+    "section-tests": "^2.1.1",
     "superagent": "^3.8.3"
   },
   "dependencies": {
     "ee-log": "^3.0.6",
     "ee-types": "^2.1.4",
-    "logd": "^2.1.2",
+    "logd": "^2.1.3",
     "logd-console-transport": "^1.0.0",
-    "rda-service": "^1.1.0",
-    "rda-service-registry": "^1.1.0"
+    "rda-service": "^2.5.1"
   }
 }

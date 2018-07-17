@@ -12,10 +12,11 @@ const log = logd.module('rda-compute-dataset');
 
 
 const statusMap = new Map([
-    ['initialized', 100],
-    ['configuring', 150],
+    ['created', 0],
+    ['initializing', 100],
+    ['ready', 150],
     ['loading', 200],
-    ['ready', 300],
+    ['loaded', 300],
     ['discarded', 1000],
     ['failed', 10000],
 ]);
@@ -27,10 +28,14 @@ export default class DataSet {
 
 
     constructor({
-        setName = 'default',
-        minFreeMemory = 10,
-    } = {}) {
-        this.setName = setName;
+        shardIdentifier,
+        dataSource,
+        minFreeMemory = 25,
+        registryClient,
+    }) {
+        this.shardIdentifier = shardIdentifier;
+        this.dataSource = dataSource;
+        this.registryClient = registryClient;
 
         // the amount of memory that must be available
         // in order to assume the process is healthy and
@@ -40,7 +45,10 @@ export default class DataSet {
 
         // there is a pretty rigid status management in order
         // to keep track of things
-        this.currentStatus = statusMap.get('initialized');
+        this.currentStatus = statusMap.get('created');
+
+        // the offset when loading data
+        this.offset = 0;
     }
 
 
@@ -70,13 +78,16 @@ export default class DataSet {
 
 
 
+
     /**
-    * status change to initializing, indicates that
-    * the data source is preparing the shards
+    * prepare the set for accepting data
     */
-    initialize() {
-        this.setStatus('configuring');
+    async initialize() {
+        this.setStatus('initializing');
+        this.dataSourceHost = await this.registryClient.resolve(this.dataSource);
+        this.setStatus('ready');
     }
+
 
 
 
@@ -99,7 +110,7 @@ export default class DataSet {
     * complete
     */
     complete() {
-        this.setStatus('ready');
+        this.setStatus('loaded');
     }
 
 

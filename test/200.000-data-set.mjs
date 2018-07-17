@@ -11,25 +11,27 @@ import log from 'ee-log';
 
 section('Data Set', (section) => {
 
+
     section.test('Set up', async() => {
-        new DataSet();
+        new DataSet({
+            shardIdentifier: 'test'
+        });
     });
 
-
-    section.test('Initialize', async() => {
-        const dataSet = new DataSet();
-        dataSet.initialize();
-    });
 
 
     section.test('prepare for data', async() => {
-        const dataSet = new DataSet();
+        const dataSet = new DataSet({
+            shardIdentifier: 'test'
+        });
         dataSet.prepareForData();
     });
 
 
     section.test('Add values', async() => {
-        const dataSet = new DataSet();
+        const dataSet = new DataSet({
+            shardIdentifier: 'test'
+        });
         dataSet.prepareForData();
         dataSet.addValues([{
             test: 189
@@ -38,7 +40,9 @@ section('Data Set', (section) => {
 
 
     section.test('Discard set', async() => {
-        const dataSet = new DataSet();
+        const dataSet = new DataSet({
+            shardIdentifier: 'test'
+        });
         dataSet.prepareForData();
         dataSet.discard()
         assert(dataSet.hasEnded())
@@ -46,7 +50,9 @@ section('Data Set', (section) => {
 
 
     section.test('Fail set', async() => {
-        const dataSet = new DataSet();
+        const dataSet = new DataSet({
+            shardIdentifier: 'test'
+        });
         dataSet.prepareForData();
         dataSet.fail()
         assert(dataSet.hasEnded())

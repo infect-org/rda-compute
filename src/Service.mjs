@@ -11,11 +11,6 @@ const log = logd.module('rda-compute-service');
 
 // controllers
 import DataSetController from './controller/DataSet';
-import ConfigurationController from './controller/Configuration';
-
-
-
-
 
 
 
@@ -47,7 +42,6 @@ export default class ComputeService extends RDAService {
 
         // register controllers
         this.registerController(new DataSetController(options));
-        this.registerController(new ConfigurationController(options));
 
 
         await super.load();

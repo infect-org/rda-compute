@@ -6,6 +6,7 @@ import type from 'ee-types';
 import log from 'ee-log';
 import DataSet from '../DataSet';
 import superagent from 'superagent';
+import Module from '../Module';
 
 
 
@@ -88,7 +89,7 @@ export default class DataSetController extends Controller {
 
 
     /**
-    * register a new service
+    * laod a data set
     */
     async create(request, response) {
         const data = request.body;
@@ -146,10 +147,17 @@ export default class DataSetController extends Controller {
         const sourceCodeReponse = await superagent.get(`${this.dataSet.dataSourceHost}/${this.dataSet.dataSource}.source-code`).ok(res => res.status === 200).send();
         const map = new Map();
 
-        sourceCodeReponse.body.forEach((sourceItem) => {
-            if (!map.has(sourceCode.identifier)) map.set(sourceCode.identifier, {});
-            map.get(sourceCode.identifier)[sourceItem.type] = sourceItem.sourceCode;
-        });
+        for (const sourceItem of sourceCodeReponse.body) {
+            if (!map.has(sourceItem.identifier)) map.set(sourceItem.identifier, {});
+            
+            const module = new Module({
+                sourceCode: sourceItem.sourceCode
+            });
+
+            await module.load();
+
+            map.get(sourceItem.identifier)[sourceItem.type] = module;
+        }
 
         this.configuration.set('sourceCode', map);
     }

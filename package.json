@@ -7,7 +7,7 @@
     "test": "test"
   },
   "scripts": {
-    "test": "node --experimental-modules --no-warnings ./node_modules/.bin/section ./test/*.mjs --dev --subenv-testing --log-level=error+ --log-module=*"
+    "test": "node --experimental-modules --no-warnings --experimental-vm-modules ./node_modules/.bin/section ./test/*.mjs --dev --subenv-testing --log-level=error+ --log-module=*"
   },
   "repository": {
     "type": "git",

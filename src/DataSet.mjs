@@ -165,9 +165,9 @@ export default class DataSet {
     * dataset id viable
     */
     getValues() {
-        if (this.currentStatus === statusMap.get('ready')) {
+        if (this.currentStatus === statusMap.get('loaded')) {
             return this.values;
-        } else throw new Error(`Cannot return values for data set with the status '${this.getCurrentStatusName()}'! The status 'ready' would be valid.`);
+        } else throw new Error(`Cannot return values for data set with the status '${this.getCurrentStatusName()}'! The status 'loaded' would be valid.`);
     }
 
 

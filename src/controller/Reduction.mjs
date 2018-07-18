@@ -41,7 +41,8 @@ export default class ReductionController extends Controller {
             // collect the data from all shards
             const dataSets = await Promise.all(data.shards.map(async (shard) => {
                 const res = await superagent.post(`${shard.url}/rda-compute.mapping`).send({
-                    functionName: data.functionName
+                    functionName: data.functionName,
+                    parameters: data.parameters,
                 });
 
                 return res.body;

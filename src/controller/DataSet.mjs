@@ -122,6 +122,11 @@ export default class DataSetController extends Controller {
                 // prepare for new data
                 this.dataSet.prepareForData();
 
+
+                // load the required source code
+                await this.loadSourceCode();
+
+
                 // initialize the 
                 this.loadData();
             } else response.status(409).send(`Cannot create new data set since the existing data set has not ended (status '${this.dataSet.getCurrentStatusName()}')`);
@@ -130,6 +135,24 @@ export default class DataSetController extends Controller {
 
 
 
+
+
+
+
+    /**
+    * load all source code from the data source
+    */
+    async loadSourceCode() {
+        const sourceCodeReponse = await superagent.get(`${this.dataSet.dataSourceHost}/${this.dataSet.dataSource}.source-code`).ok(res => res.status === 200).send();
+        const map = new Map();
+
+        sourceCodeReponse.body.forEach((sourceItem) => {
+            if (!map.has(sourceCode.identifier)) map.set(sourceCode.identifier, {});
+            map.get(sourceCode.identifier)[sourceItem.type] = sourceItem.sourceCode;
+        });
+
+        this.configuration.set('sourceCode', map);
+    }
 
 
 

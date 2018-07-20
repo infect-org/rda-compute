@@ -157,7 +157,12 @@ export default class DataSet {
     }
 
 
-
+    /**
+    * returns the number of records loaded
+    */
+    getRecordCount() {
+        return this.values && this.values.length || 0;
+    }
 
 
     /**

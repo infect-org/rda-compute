@@ -40,7 +40,8 @@ export default class MappingController extends Controller {
             else {
                 const mapper = this.configuration.get('sourceCode').get(data.functionName).mapper;
                 const rows = this.configuration.get('dataSet').getValues();
-                return await mapper.compute(rows, data.parameters);
+                const params = data.parameters;
+                return await mapper.compute({rows, params});
             }
         }
     }

@@ -28,7 +28,7 @@ export default class Module {
     * build an es6 module
     */
     async load() {
-        this.context = vm.createContext({});
+        this.context = vm.createContext({console});
         this.module = new vm.Module(this.sourceCode, {
             context: this.context
         });

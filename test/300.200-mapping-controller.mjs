@@ -39,7 +39,7 @@ section('Mapping Controller', (section) => {
 
 
     section.test('Map Data', async() => {
-        section.setTimeout(5000);
+        section.setTimeout(15000);
 
         const service = new Service();
         await service.load();

@@ -70,6 +70,9 @@ export default class DataSetController extends Controller {
             // check how to continue
             if (rows.length === this.pageSize) {
 
+                // next page please!
+                this.dataSet.offset += this.pageSize;
+                
                 // get another page
                 this.loadData();
             } else {
@@ -182,23 +185,27 @@ export default class DataSetController extends Controller {
             case 'ready':
                 return {
                     status: this.dataSet.getCurrentStatusName(),
+                    recordCount: this.dataSet.getRecordCount(),
                 };
 
             case 'loaded':
                 response.status(201).send({
                     status: this.dataSet.getCurrentStatusName(),
+                    recordCount: this.dataSet.getRecordCount(),
                 });
                 break;
 
             case 'discarded':
                 response.status(409).send({
                     status: this.dataSet.getCurrentStatusName(),
+                    recordCount: this.dataSet.getRecordCount(),
                 });
                 break;
 
             case 'failed':
                 response.status(409).send({
                     status: this.dataSet.getCurrentStatusName(),
+                    recordCount: this.dataSet.getRecordCount(),
                     err: this.dataSet.err,
                 });
                 break;
@@ -206,6 +213,7 @@ export default class DataSetController extends Controller {
             default:
                 response.status(500).send({
                     status: this.dataSet.getCurrentStatusName(),
+                    recordCount: this.dataSet.getRecordCount(),
                 });
                 break;
         }

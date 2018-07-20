@@ -49,9 +49,10 @@ export default class ReductionController extends Controller {
             }));
 
 
-
             const reducer = this.configuration.get('sourceCode').get(data.functionName).reducer;
-            return await reducer.compute(dataSets);
+            const result = await reducer.compute(dataSets);
+
+            return result;
         }
     }
 }

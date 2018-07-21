@@ -45,7 +45,10 @@ export default class ReductionController extends Controller {
                     parameters: data.parameters,
                 });
 
-                return res.body;
+                return {
+                    shard:shard, 
+                    results: res.body,
+                };
             }));
 
 

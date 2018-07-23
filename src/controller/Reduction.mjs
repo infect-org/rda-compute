@@ -39,6 +39,7 @@ export default class ReductionController extends Controller {
         else {
 
             // collect the data from all shards
+            const mapperStart = Date.now();
             const dataSets = await Promise.all(data.shards.map(async (shard) => {
                 const res = await superagent.post(`${shard.url}/rda-compute.mapping`).send({
                     functionName: data.functionName,
@@ -50,10 +51,17 @@ export default class ReductionController extends Controller {
                     results: res.body,
                 };
             }));
+            const mapperDuration = Date.now()-mapperStart;
 
 
             const reducer = this.configuration.get('sourceCode').get(data.functionName).reducer;
             const result = await reducer.compute(dataSets);
+
+
+            if (result.timings) {
+                result.timings.filtering = mapperDuration;
+                result.timings.total = Date.now() - mapperStart;
+            }
 
             return result;
         }

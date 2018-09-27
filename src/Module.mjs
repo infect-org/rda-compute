@@ -1,5 +1,3 @@
-'use strict';
-
 import vm from 'vm';
 
 
@@ -29,7 +27,7 @@ export default class Module {
     */
     async load() {
         this.context = vm.createContext({console});
-        this.module = new vm.Module(this.sourceCode, {
+        this.module = new vm.SourceTextModule(this.sourceCode, {
             context: this.context
         });
 

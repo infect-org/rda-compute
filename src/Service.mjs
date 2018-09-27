@@ -1,6 +1,3 @@
-'use strict';
-
-
 import RDAService from 'rda-service';
 import path from 'path';
 import logd from 'logd';

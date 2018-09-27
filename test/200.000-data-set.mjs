@@ -1,8 +1,5 @@
-'use strict';
-
 import DataSet from '../src/DataSet';
 import section from 'section-tests';
-import request from 'superagent';
 import assert from 'assert';
 import log from 'ee-log';
 
@@ -17,7 +14,6 @@ section('Data Set', (section) => {
             shardIdentifier: 'test'
         });
     });
-
 
 
     section.test('prepare for data', async() => {

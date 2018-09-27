@@ -1,6 +1,3 @@
-'use strict';
-
-
 import type from 'ee-types';
 import logd from 'logd';
 import v8 from 'v8';

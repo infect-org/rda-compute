@@ -1,12 +1,9 @@
-'use strict';
-
-
 import {Controller} from 'rda-service';
 import type from 'ee-types';
 import log from 'ee-log';
 import DataSet from '../DataSet';
-import superagent from 'superagent';
 import Module from '../Module';
+import HTTP2Client from '@distributed-systems/http2-client';
 
 
 
@@ -44,11 +41,22 @@ export default class DataSetController extends Controller {
         this.pageSize = 10000;
 
 
+        // http 2 client
+        this.httpClient = new HTTP2Client();
+
+
         this.enableAction('create');
         this.enableAction('list');
     }
 
 
+
+    /**
+     * shut down the class
+     */
+    async end() {
+        await this.httpClient.end();
+    }
 
 
 
@@ -56,33 +64,37 @@ export default class DataSetController extends Controller {
     * get the data from data source
     */
     loadData() {
-        superagent.get(`${this.dataSet.dataSourceHost}/${this.dataSet.dataSource}.data`).ok(res => res.status === 200).query({
-            shard: this.dataSet.shardIdentifier,
-            offset: this.dataSet.offset,
-            limit: this.pageSize,
-        }).send().then((response) => {
-            const rows = response.body;
+        this.httpClient.get(`${this.dataSet.dataSourceHost}/${this.dataSet.dataSource}.data`)
+            .expect(200)
+            .query({
+                shard: this.dataSet.shardIdentifier,
+                offset: this.dataSet.offset,
+                limit: this.pageSize,
+            })
+            .send()
+            .then(async(response) => {
+                const rows = await response.getData();
 
-            // add to in memory storage
-            this.dataSet.addValues(rows);
+                // add to in memory storage
+                this.dataSet.addValues(rows);
 
 
-            // check how to continue
-            if (rows.length === this.pageSize) {
+                // check how to continue
+                if (rows.length === this.pageSize) {
 
-                // next page please!
-                this.dataSet.offset += this.pageSize;
-                
-                // get another page
-                this.loadData();
-            } else {
+                    // next page please!
+                    this.dataSet.offset += this.pageSize;
+                    
+                    // get another page
+                    this.loadData();
+                } else {
 
-                // the data was loaded, mark as ready
-                this.dataSet.complete();
-            }
-        }).catch((err) => {
-            this.dataSet.fail(err);
-        });
+                    // the data was loaded, mark as ready
+                    this.dataSet.complete();
+                }
+            }).catch((err) => {
+                this.dataSet.fail(err);
+            });
     }
 
 
@@ -94,14 +106,14 @@ export default class DataSetController extends Controller {
     /**
     * laod a data set
     */
-    async create(request, response) {
-        const data = request.body;
+    async create(request) {
+        const data = await request.getData();
 
-        if (!data) response.status(400).send(`Missing request body!`);
-        else if (!type.object(data)) response.status(400).send(`Request body must be a json object!`);
-        else if (!type.string(data.dataSource)) response.status(400).send(`Missing parameter or invalid 'dataSource' in request body!`);
-        else if (!type.string(data.shardIdentifier)) response.status(400).send(`Missing parameter or invalid 'shardIdentifier' in request body!`);
-        else if (!type.number(data.minFreeMemory)) response.status(400).send(`Missing parameter or invalid 'minFreeMemory' in request body!`);
+        if (!data) request.response().status(400).send(`Missing request body!`);
+        else if (!type.object(data)) request.response().status(400).send(`Request body must be a json object!`);
+        else if (!type.string(data.dataSource)) request.response().status(400).send(`Missing parameter or invalid 'dataSource' in request body!`);
+        else if (!type.string(data.shardIdentifier)) request.response().status(400).send(`Missing parameter or invalid 'shardIdentifier' in request body!`);
+        else if (!type.number(data.minFreeMemory)) request.response().status(400).send(`Missing parameter or invalid 'minFreeMemory' in request body!`);
         else {
 
             // check if a new dataSet can be created
@@ -133,7 +145,7 @@ export default class DataSetController extends Controller {
 
                 // initialize the 
                 this.loadData();
-            } else response.status(409).send(`Cannot create new data set since the existing data set has not ended (status '${this.dataSet.getCurrentStatusName()}')`);
+            } else request.response().status(409).send(`Cannot create new data set since the existing data set has not ended (status '${this.dataSet.getCurrentStatusName()}')`);
         }
     }
 
@@ -147,15 +159,26 @@ export default class DataSetController extends Controller {
     * load all source code from the data source
     */
     async loadSourceCode() {
-        const sourceCodeReponse = await superagent.get(`${this.dataSet.dataSourceHost}/${this.dataSet.dataSource}.source-code`).ok(res => res.status === 200).send();
+        const sourceCodeReponse = await this.httpClient.get(`${this.dataSet.dataSourceHost}/${this.dataSet.dataSource}.source-code`)
+            .expect(200)
+            .send();
+
+        const data = await sourceCodeReponse.getData();
         const map = new Map();
 
-        for (const sourceItem of sourceCodeReponse.body) {
+        for (const sourceItem of data) {
             if (!map.has(sourceItem.identifier)) map.set(sourceItem.identifier, {});
+            let module;
             
-            const module = new Module({
-                sourceCode: sourceItem.sourceCode
-            });
+            try {
+                module = new Module({
+                    sourceCode: sourceItem.sourceCode
+                });
+            } catch (err) {
+                err.message = `Failed to load Script Source Module '${sourceItem.identifier}' from data source '${this.dataSet.dataSource}': ${err.message}`;
+                err.sourceCode = sourceItem.sourceCode;
+                throw err;
+            }
 
             await module.load();
 
@@ -177,7 +200,7 @@ export default class DataSetController extends Controller {
     * the status is loaded from the dataSet instance
     * initialized in the create method.
     */
-    async list(request, response) {
+    async list(request) {
         switch(this.dataSet.getCurrentStatusName()) {
             case 'created':
             case 'initializing':
@@ -189,21 +212,21 @@ export default class DataSetController extends Controller {
                 };
 
             case 'loaded':
-                response.status(201).send({
+                request.response().status(201).send({
                     status: this.dataSet.getCurrentStatusName(),
                     recordCount: this.dataSet.getRecordCount(),
                 });
                 break;
 
             case 'discarded':
-                response.status(409).send({
+                request.response().status(409).send({
                     status: this.dataSet.getCurrentStatusName(),
                     recordCount: this.dataSet.getRecordCount(),
                 });
                 break;
 
             case 'failed':
-                response.status(409).send({
+                request.response().status(409).send({
                     status: this.dataSet.getCurrentStatusName(),
                     recordCount: this.dataSet.getRecordCount(),
                     err: this.dataSet.err,
@@ -211,7 +234,7 @@ export default class DataSetController extends Controller {
                 break;
 
             default:
-                response.status(500).send({
+                request.response().status(500).send({
                     status: this.dataSet.getCurrentStatusName(),
                     recordCount: this.dataSet.getRecordCount(),
                 });

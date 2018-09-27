@@ -1,10 +1,7 @@
-'use strict';
-
-
-import {Controller} from 'rda-service';
+import { Controller } from 'rda-service';
 import type from 'ee-types';
 import log from 'ee-log';
-import superagent from 'superagent';
+import HTTP2Client from '@distributed-systems/http2-client';
 
 
 
@@ -21,38 +18,47 @@ export default class ReductionController extends Controller {
         // service
         this.configuration = configuration;
         this.enableAction('create');
+
+        // http 2 client
+        this.httpClient = new HTTP2Client();
     }
 
 
+
+    /**
+     * shut down the class
+     */
+    async end() {
+        await this.httpClient.end();
+    }
 
 
     /**
     * instruct the shards to map the data, then reduce it
     */
-    async create(request, response) {
-        const data = request.body;
+    async create(request) {
+        const data = await request.getData();
 
-        if (!data) response.status(400).send(`Missing request body!`);
-        else if (!type.object(data)) response.status(400).send(`Request body must be a json object!`);
-        else if (!type.string(data.functionName)) response.status(400).send(`Missing parameter or invalid 'functionName' in request body!`);
-        else if (!type.array(data.shards)) response.status(400).send(`Missing parameter or invalid 'shards' in request body!`);
+        if (!data) request.response().status(400).send(`Missing request body!`);
+        else if (!type.object(data)) request.response().status(400).send(`Request body must be a json object!`);
+        else if (!type.string(data.functionName)) request.response().status(400).send(`Missing parameter or invalid 'functionName' in request body!`);
+        else if (!type.array(data.shards)) request.response().status(400).send(`Missing parameter or invalid 'shards' in request body!`);
         else {
 
             // collect the data from all shards
             const mapperStart = Date.now();
             const dataSets = await Promise.all(data.shards.map(async (shard) => {
-                const res = await superagent.post(`${shard.url}/rda-compute.mapping`).send({
+                const res = await this.httpClient.post(`${shard.url}/rda-compute.mapping`).send({
                     functionName: data.functionName,
                     parameters: data.parameters,
                 });
 
                 return {
-                    shard:shard, 
-                    results: res.body,
+                    shard: shard, 
+                    results: await res.getData(),
                 };
             }));
             const mapperDuration = Date.now()-mapperStart;
-
 
             const reducer = this.configuration.get('sourceCode').get(data.functionName).reducer;
             const result = await reducer.compute(dataSets);

@@ -1,12 +1,10 @@
-'use strict';
-
 import Service from '../index.mjs';
 import section from 'section-tests';
-import superagent from 'superagent';
+import ServiceManager from '@infect/rda-service-manager';
+import HTTP2Client from '@distributed-systems/http2-client';
 import assert from 'assert';
 import log from 'ee-log';
-import {ServiceManager} from 'rda-service';
-import {ShardedDataSet} from 'rda-fixtures';
+import { ShardedDataSet } from 'rda-fixtures';
 
 
 
@@ -15,8 +13,8 @@ const host = 'http://l.dns.porn';
 
 const mapper = `
     const Mapper = class {
-        async compute(data) {
-            return data[0];
+        async compute({rows}) {
+            return rows[0];
         }
     }
 Mapper`;
@@ -42,6 +40,7 @@ section('Mapping Controller', (section) => {
         section.setTimeout(15000);
 
         const service = new Service();
+        const client = new HTTP2Client();
         await service.load();
 
 
@@ -50,7 +49,7 @@ section('Mapping Controller', (section) => {
         const mapperName = 'source-identifier-'+Math.round(Math.random()*100000);
         const storageHost = await service.registryClient.resolve('infect-rda-sample-storage');
 
-        await superagent.post(`${storageHost}/infect-rda-sample-storage.source-code`).ok(res => res.status === 201).send({
+        await client.post(`${storageHost}/infect-rda-sample-storage.source-code`).expect(201).send({
             sourceCode: mapper,
             identifier: mapperName,
             type: 'mapper',
@@ -65,7 +64,7 @@ section('Mapping Controller', (section) => {
 
 
         section.notice('initialize data set');
-        await superagent.post(`${host}:${service.getPort()}/rda-compute.data-set`).ok(res => res.status === 201).send({
+        await client.post(`${host}:${service.getPort()}/rda-compute.data-set`).expect(201).send({
             dataSource: 'infect-rda-sample-storage',
             shardIdentifier: shardName,
             minFreeMemory: 25,
@@ -74,25 +73,27 @@ section('Mapping Controller', (section) => {
 
 
         section.notice('get status');
-        await superagent.get(`${host}:${service.getPort()}/rda-compute.data-set`).ok(res => res.status === 200).send();
+        await client.get(`${host}:${service.getPort()}/rda-compute.data-set`).expect(200).send();
 
 
         await section.wait(200);
         section.notice('get completed status');
-        await superagent.get(`${host}:${service.getPort()}/rda-compute.data-set`).ok(res => res.status === 201).send();
+        await client.get(`${host}:${service.getPort()}/rda-compute.data-set`).expect(201).send();
 
 
 
         section.notice('execute mapper on it');
-        const mappingResponse = await superagent.post(`${host}:${service.getPort()}/rda-compute.mapping`).ok(res => res.status === 201).send({
+        const mappingResponse = await client.post(`${host}:${service.getPort()}/rda-compute.mapping`).expect(201).send({
             functionName: mapperName,
         });
+        const data = await mappingResponse.getData();
 
-        assert(mappingResponse.body);
-        assert(mappingResponse.body.bacteriumId)
+        assert(data);
+        assert(data.bacteriumId)
 
         await section.wait(200);
         await service.end();
+        await client.end();
     });
 
 

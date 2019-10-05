@@ -1,13 +1,13 @@
 {
-  "name": "rda-compute-service",
-  "version": "1.0.0",
+  "name": "@infect/rda-compute-service",
+  "version": "2.0.0",
   "description": "Compute Service for RDA",
   "main": "index.mjs",
   "directories": {
     "test": "test"
   },
   "scripts": {
-    "test": "node --experimental-modules --no-warnings --experimental-vm-modules ./node_modules/.bin/section ./test/*.mjs --dev --subenv-testing --log-level=error+ --log-module=*"
+    "test": "node --experimental-modules --no-warnings --experimental-vm-modules ./node_modules/.bin/section ./test/*.js --dev.testing --log-level=error+ --log-module=*"
   },
   "repository": {
     "type": "git",
@@ -17,24 +17,25 @@
     "rda",
     "compute"
   ],
-  "author": "Michael van der Weg",
+  "author": "Lina van der Weg",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/infect-org/rda-compute-service/issues"
   },
   "homepage": "https://github.com/infect-org/rda-compute-service#readme",
   "devDependencies": {
-    "@distributed-systems/http2-client": "^1.2.2",
-    "@infect/rda-service-manager": "^1.0.2",
-    "section-tests": "^2.1.1"
+    "@distributed-systems/http2-client": "^2.0.1",
+    "@infect/rda-service-manager": "^2.0.3",
+    "section-tests": "^2.2.4"
   },
   "dependencies": {
+    "@infect/rda-fixtures": "^4.0.0",
+    "@infect/rda-service": "^4.0.4",
     "ee-log": "^3.0.6",
     "ee-types": "^2.1.4",
     "envr": "^2.1.4",
     "logd": "^2.1.3",
-    "logd-console-transport": "^1.0.0",
-    "rda-fixtures": "^2.0.0",
-    "rda-service": "^3.1.0"
-  }
+    "logd-console-transport": "^1.0.0"
+  },
+  "type": "module"
 }

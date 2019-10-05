@@ -1,10 +1,10 @@
-import Service from '../index.mjs';
+import Service from '../index.js';
 import section from 'section-tests';
 import ServiceManager from '@infect/rda-service-manager';
 import HTTP2Client from '@distributed-systems/http2-client';
 import assert from 'assert';
 import log from 'ee-log';
-import { ShardedDataSet } from 'rda-fixtures';
+import { ShardedDataSet } from '@infect/rda-fixtures';
 
 
 
@@ -36,7 +36,7 @@ section('Reduction Controller', (section) => {
 
     section.setup(async() => {
         sm = new ServiceManager({
-            args: '--dev --log-level=error+ --log-module=*'.split(' ')
+            args: '--dev.testing --log-level=error+ --log-module=*'.split(' ')
         });
         
         await sm.startServices('rda-service-registry');

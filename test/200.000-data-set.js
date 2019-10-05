@@ -1,4 +1,4 @@
-import DataSet from '../src/DataSet';
+import DataSet from '../src/DataSet.js';
 import section from 'section-tests';
 import assert from 'assert';
 import log from 'ee-log';

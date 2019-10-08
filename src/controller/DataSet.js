@@ -1,11 +1,13 @@
 import {Controller} from '@infect/rda-service';
 import type from 'ee-types';
-import log from 'ee-log';
+import logd from 'logd';
 import DataSet from '../DataSet.js';
 import Module from '../Module.js';
 import HTTP2Client from '@distributed-systems/http2-client';
 
 
+
+const log = logd.module('rda-compute-dataset-controller');
 
 
 export default class DataSetController extends Controller {
@@ -64,6 +66,7 @@ export default class DataSetController extends Controller {
     * get the data from data source
     */
     loadData() {
+        log.debug(`Loading RDA data for shard ${this.dataSet.shardIdentifier}, offset ${this.dataSet.offset}, limit ${this.pageSize}`);
         this.httpClient.get(`${this.dataSet.dataSourceHost}/${this.dataSet.dataSource}.data`)
             .expect(200)
             .query({
@@ -143,8 +146,10 @@ export default class DataSetController extends Controller {
                 await this.loadSourceCode();
 
 
-                // initialize the 
-                this.loadData();
+                // load the data from the storage
+                setImmediate(() => {
+                    this.loadData();
+                });
             } else request.response().status(409).send(`Cannot create new data set since the existing data set has not ended (status '${this.dataSet.getCurrentStatusName()}')`);
         }
     }
@@ -159,6 +164,8 @@ export default class DataSetController extends Controller {
     * load all source code from the data source
     */
     async loadSourceCode() {
+        log.debug(`Loading RDA source-code for data source ${this.dataSet.dataSource}`);
+
         const sourceCodeReponse = await this.httpClient.get(`${this.dataSet.dataSourceHost}/${this.dataSet.dataSource}.source-code`)
             .expect(200)
             .send();
@@ -179,8 +186,17 @@ export default class DataSetController extends Controller {
                 err.sourceCode = sourceItem.sourceCode;
                 throw err;
             }
+            log.debug(`Source-code for data source ${this.dataSet.dataSource} loaded`);
 
-            await module.load();
+
+            try {
+                await module.load();
+            } catch (err) {
+                err.message = `Failed to initialize Script Source Module '${sourceItem.identifier}' from data source '${this.dataSet.dataSource}': ${err.message}`;
+                err.sourceCode = sourceItem.sourceCode;
+                throw err;
+            }
+            log.debug(`Source-code for data source ${this.dataSet.dataSource} initialized`);
 
             map.get(sourceItem.identifier)[sourceItem.type] = module;
         }

@@ -59,7 +59,7 @@ export default class DataSet {
         const usage = v8.getHeapStatistics();
         const currentMemoryUsage = usage.total_available_size/usage.heap_size_limit*100;
         
-        log.debug(`[${this.setName}] Current memory usage is ${(100-currentMemoryUsage).toFixed(2)}`);
+        log.debug(`[${this.shardIdentifier}] Current memory usage is ${(100-currentMemoryUsage).toFixed(2)}`);
 
         return currentMemoryUsage > this.minFreeMemoryPercent;
     }
@@ -80,6 +80,7 @@ export default class DataSet {
     * prepare the set for accepting data
     */
     async initialize() {
+        log.debug(`Initializing data set ${this.shardIdentifier}`);
         this.setStatus('initializing');
         this.dataSourceHost = await this.registryClient.resolve(this.dataSource);
         this.setStatus('ready');
@@ -92,6 +93,7 @@ export default class DataSet {
     * set up the data set, make it for accepting values
     */
     prepareForData() {
+        log.debug(`Preparing data set ${this.shardIdentifier} for data`);
         this.setStatus('loading');
 
         // the values of the dataset
@@ -143,7 +145,7 @@ export default class DataSet {
         if (this.currentStatus === statusMap.get('loading')) {
             this.values.push(...values);
 
-            log.debug(`[${this.setName}] Value count is ${this.values.length}`);
+            log.debug(`[${this.shardIdentifier}] Value count is ${this.values.length}`);
 
             // make sure we're not using too much memory
             if (!this.isMemoryOk()) {
@@ -186,7 +188,7 @@ export default class DataSet {
 
         if (newStatus > this.currentStatus) {
             this.currentStatus = newStatus;
-            log.info(`[${this.setName}] Status changed to ${status}`);
+            log.info(`[${this.shardIdentifier}] Status changed to ${status}`);
         }
         else throw new Error(`Cannopt set status '${status}', it has a lower value (${newStatus}) than the currentStatus '${this.getCurrentStatusName()}' (${this.currentStatus})!`);
     }

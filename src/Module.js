@@ -35,7 +35,10 @@ export default class Module {
         await this.module.link(async () => {});
 
 
-        this.module.instantiate();
+        // the api in node v12 removed this method ...
+        if (typeof this.module.instantiate === 'function') {
+            this.module.instantiate();
+        }
 
         const {result} = await this.module.evaluate();
         this.Constructor = result;

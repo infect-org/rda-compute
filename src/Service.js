@@ -1,6 +1,7 @@
 import RDAService from '@infect/rda-service';
 import path from 'path';
 import logd from 'logd';
+import DataSetManager from './DataSetManager.js';
 
 const log = logd.module('rda-compute-service');
 
@@ -25,10 +26,6 @@ export default class ComputeService extends RDAService {
             name: 'rda-compute',
             appRoot,
         });
-
-        // configuration values passed by the 
-        // cluster service
-        this.configuration = new Map();
     }
 
 
@@ -41,10 +38,13 @@ export default class ComputeService extends RDAService {
     async load() {
         await this.initialize();
 
+        this.dataSetManager = new DataSetManager({
+            registryClient: this.registryClient,
+        });
+
         
         const options = {
-            configuration: this.configuration,
-            registryClient: this.registryClient,
+            dataSetManager: this.dataSetManager,
         };
 
 

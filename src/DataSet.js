@@ -1,6 +1,8 @@
 import type from 'ee-types';
 import logd from 'logd';
 import v8 from 'v8';
+import SourceCodeManager from './SourceCodeManager.js';
+import HTTP2Client from '@distributed-systems/http2-client';
 
 
 const log = logd.module('rda-compute-dataset');
@@ -29,7 +31,9 @@ export default class DataSet {
         dataSource,
         minFreeMemory = 25,
         registryClient,
+        dataSetIdentifier,
     }) {
+        this.dataSetIdentifier = dataSetIdentifier;
         this.shardIdentifier = shardIdentifier;
         this.dataSource = dataSource;
         this.registryClient = registryClient;
@@ -46,7 +50,21 @@ export default class DataSet {
 
         // the offset when loading data
         this.offset = 0;
+
+        // the number of records that should be loaded
+        // per page
+        this.pageSize = 10000;
+
+        // http 2 client
+        this.httpClient = new HTTP2Client();
+
+
+        this.mappers = new Map();
+        this.reducers = new Map();
     }
+
+
+
 
 
 
@@ -84,6 +102,116 @@ export default class DataSet {
         this.setStatus('initializing');
         this.dataSourceHost = await this.registryClient.resolve(this.dataSource);
         this.setStatus('ready');
+    }
+
+
+
+
+    async load() {
+
+        // change status to loading
+        this.prepareForData();
+
+        // initialize the source code management
+        this.sourceCodeManager = new SourceCodeManager();
+
+        // get source from storage service
+        await this.sourceCodeManager.load(this.dataSourceHost, this.dataSource, this.dataSetIdentifier);
+
+        if (!this.sourceCodeManager.hasModule('InfectModel.js')) {
+            throw new Error(`Missing source file 'InfectModel.js'!`);
+        }
+
+        // set up the constructor for the model that holds the data
+        this.ModelConstructor = await this.sourceCodeManager.runModule('InfectModel.js');
+
+        // start loading data, don't wait for this to finish, since it may take
+        // a pretty long time
+        this.loadData().then(() => {
+            this.complete();
+        }).catch((err) => {
+            this.fail(err);
+        });
+    }
+
+
+
+
+
+    async runReducer(functionName, dataSets) {
+        if (!this.reducers.has(functionName)) {
+            const Reducer = await this.importSourceFile(`${functionName}Reducer.js`);
+            const reducer = new Reducer();
+
+            this.reducers.set(functionName, reducer);
+        }
+
+        const reducer = this.reducers.get(functionName);
+        return await reducer.compute(dataSets);
+    }
+
+
+
+
+    async runMapper(functionName, filterConfiguration) {
+        if (!this.mappers.has(functionName)) {
+            const Mapper = await this.importSourceFile(`${functionName}Mapper.js`);
+            const mapper = new Mapper();
+
+            await mapper.load();
+            this.mappers.set(functionName, mapper);
+        }
+
+        const mapper = this.mappers.get(functionName);
+        const models = this.getValues();
+
+        return await mapper.compute({ models, filterConfiguration });
+    }
+
+
+
+
+
+    async importSourceFile(specifier) {
+        if (!this.sourceCodeManager.hasModule(specifier)) {
+            throw new Error(`Missing source file '${specifier}'!`);
+        }
+
+        return await this.sourceCodeManager.runModule(specifier);
+    }
+
+
+
+
+    async loadData() {
+        log.debug(`Loading RDA data for shard ${this.shardIdentifier}, offset ${this.offset}, limit ${this.pageSize}`);
+
+        const response = await this.httpClient.get(`${this.dataSourceHost}/${this.dataSource}.data`)
+            .expect(200)
+            .query({
+                shard: this.shardIdentifier,
+                offset: this.offset,
+                limit: this.pageSize,
+            })
+            .send();
+
+        // wait for data
+        const rows = await response.getData();
+        const Model = this.ModelConstructor;
+
+        // add to in memory storage
+        this.addValues(rows.map(row => new Model(row)));
+
+
+        // check how to continue
+        if (rows.length === this.pageSize) {
+
+            // next page please!
+            this.offset += this.pageSize;
+            
+            // get another page
+            await this.loadData();
+        }
     }
 
 

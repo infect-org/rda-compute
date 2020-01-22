@@ -10,13 +10,11 @@ export default class ReductionController extends Controller {
 
 
     constructor({
-        configuration,
+        dataSetManager,
     }) {
         super('reduction');
 
-        // service wide configurations received by the cluster 
-        // service
-        this.configuration = configuration;
+        this.dataSetManager = dataSetManager;
         this.enableAction('create');
 
         // http 2 client
@@ -33,6 +31,7 @@ export default class ReductionController extends Controller {
     }
 
 
+
     /**
     * instruct the shards to map the data, then reduce it
     */
@@ -43,30 +42,35 @@ export default class ReductionController extends Controller {
         else if (!type.object(data)) request.response().status(400).send(`Request body must be a json object!`);
         else if (!type.string(data.functionName)) request.response().status(400).send(`Missing parameter or invalid 'functionName' in request body!`);
         else if (!type.array(data.shards)) request.response().status(400).send(`Missing parameter or invalid 'shards' in request body!`);
+        else if (!type.string(data.dataSetIdentifier)) request.response().status(400).send(`Missing parameter or invalid 'dataSetIdentifier' in request body!`);
         else {
+            if (!this.dataSetManager.hasDataSet(data.dataSetIdentifier)) {
+                return request.response().status(404).send(`Data Set ${ata.dataSetIdentifier} not found!`);
+            }
+
+            const dataSet = this.dataSetManager.getDataSet(data.dataSetIdentifier);
 
             // collect the data from all shards
-            const mapperStart = Date.now();
+            const mapperStart = process.hrtime.bigint();
             const dataSets = await Promise.all(data.shards.map(async (shard) => {
                 const res = await this.httpClient.post(`${shard.url}/rda-compute.mapping`).send({
                     functionName: data.functionName,
                     parameters: data.parameters,
+                    dataSetIdentifier: data.dataSetIdentifier,
                 });
 
                 return {
                     shard: shard, 
-                    results: await res.getData(),
+                    mappingResults: await res.getData(),
                 };
             }));
-            const mapperDuration = Date.now()-mapperStart;
 
-            const reducer = this.configuration.get('sourceCode').get(data.functionName).reducer;
-            const result = await reducer.compute(dataSets);
-
+            const mapperDuration = process.hrtime.bigint()-mapperStart;
+            const result = await dataSet.runReducer(data.functionName, dataSets);
 
             if (result.timings) {
-                result.timings.filtering = mapperDuration;
-                result.timings.total = Date.now() - mapperStart;
+                result.timings.filtering = Number(mapperDuration)/1000000;
+                result.timings.total = Number(process.hrtime.bigint() - mapperStart)/1000000;
             }
 
             return result;

@@ -9,13 +9,11 @@ export default class MappingController extends Controller {
 
 
     constructor({
-        configuration,
+        dataSetManager,
     }) {
         super('mapping');
 
-        // service wide configurations received by the cluster 
-        // service
-        this.configuration = configuration;
+        this.dataSetManager = dataSetManager;
         this.enableAction('create');
     }
 
@@ -32,14 +30,14 @@ export default class MappingController extends Controller {
         if (!data) request.response().status(400).send(`Missing request body!`);
         else if (!type.object(data)) request.response().status(400).send(`Request body must be a json object!`);
         else if (!type.string(data.functionName)) request.response().status(400).send(`Missing parameter or invalid 'functionName' in request body!`);
+        else if (!type.string(data.dataSetIdentifier)) request.response().status(400).send(`Missing parameter or invalid 'dataSetIdentifier' in request body!`);
         else {
-            if (!this.configuration.get('sourceCode').has(data.functionName)) throw new Error(`Cannot process data using the '${data.functionName}' function, it doesn't exist!`);
-            else {
-                const mapper = this.configuration.get('sourceCode').get(data.functionName).mapper;
-                const rows = this.configuration.get('dataSet').getValues();
-                const params = data.parameters;
-                return await mapper.compute({rows, params});
+            if (!this.dataSetManager.hasDataSet(data.dataSetIdentifier)) {
+                return request.response().status(404).send(`Data Set ${ata.dataSetIdentifier} not found!`);
             }
+
+            const dataSet = this.dataSetManager.getDataSet(data.dataSetIdentifier);
+            return await dataSet.runMapper(data.functionName, data.parameters);
         }
     }
 }

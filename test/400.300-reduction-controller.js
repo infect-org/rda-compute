@@ -12,9 +12,10 @@ const host = 'http://l.dns.porn';
 
 
 
-section('Data Set Controller', (section) => {
+section('Reducing Controller', (section) => {
     let sm;
-    let shardName;
+    let shardIdentifier;
+    let dataSetIdentifier;
 
     section.setup(async() => {
         sm = new ServiceManager({
@@ -27,13 +28,14 @@ section('Data Set Controller', (section) => {
 
         // add fixtures
         const dataSet = new ShardedDataSet();
-        shardName = await dataSet.create();
+        shardIdentifier = await dataSet.create();
+        dataSetIdentifier = dataSet.dataSetId;
     });
 
 
 
 
-    section.test('Initialize new Data Set', async() => {
+    section.test('Reduce', async() => {
         const service = new Service();
         const client = new HTTP2Client();
         await service.load();
@@ -42,21 +44,33 @@ section('Data Set Controller', (section) => {
         section.notice('initialize data set');
         await client.post(`${host}:${service.getPort()}/rda-compute.data-set`).expect(201).send({
             dataSource: 'infect-rda-sample-storage',
-            shardIdentifier: shardName,
-            minFreeMemory: 25,
+            shardIdentifier,
+            dataSetIdentifier,
         });
 
+        while (true) {
+            await section.wait(200);
+            const response = await client.get(`${host}:${service.getPort()}/rda-compute.data-set/${dataSetIdentifier}`).send();
+            if (response.status(201)) break;
+        }
 
 
-        section.notice('get status');
-        await client.get(`${host}:${service.getPort()}/rda-compute.data-set`).expect(200).send();
+        section.notice('reduction');
+        const response = await client.post(`${host}:${service.getPort()}/rda-compute.reduction`).expect(201).send({
+            dataSetIdentifier,
+            functionName: 'Infect',
+            parameters: {},
+            shards: [{
+                url: `${host}:${service.getPort()}`
+            }]
+        });
 
+        const data = await response.getData();
 
-        await section.wait(200);
-        section.notice('get completed status');
-        await client.get(`${host}:${service.getPort()}/rda-compute.data-set`).expect(201).send();
-
-
+        assert(data.values.length > 0);
+        assert.equal(data.counters.filteredModelCount, 0);
+        assert.equal(data.counters.invalidModelCount, 0);
+        assert.equal(data.counters.totalModelCount, 100);
 
         await section.wait(200);
         await service.end();

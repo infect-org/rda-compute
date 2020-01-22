@@ -24,8 +24,10 @@
   },
   "homepage": "https://github.com/infect-org/rda-compute-service#readme",
   "devDependencies": {
-    "@distributed-systems/http2-client": "^2.0.1",
-    "@infect/rda-service-manager": "^2.0.3",
+    "@distributed-systems/http2-client": "^2.1.0",
+    "@infect/rda-service-manager": "^2.0.4",
+    "@infect/rda-service-registry-client": "^2.1.1",
+    "@rainbow-industries/rainbow-config": "^1.0.1",
     "section-tests": "^2.2.4"
   },
   "dependencies": {

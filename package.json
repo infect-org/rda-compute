@@ -1,6 +1,6 @@
 {
   "name": "@infect/rda-compute-service",
-  "version": "2.0.9",
+  "version": "3.0.0",
   "description": "Compute Service for RDA",
   "main": "index.js",
   "directories": {

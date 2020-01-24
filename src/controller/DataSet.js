@@ -42,7 +42,8 @@ export default class DataSetController extends Controller {
             const dataset = await this.dataSetManager.createDataSet({
                 dataSource: data.dataSource,
                 shardIdentifier: data.shardIdentifier,
-                dataSetIdentifier: data.dataSetIdentifier
+                dataSetIdentifier: data.dataSetIdentifier,
+                modelPrefix: data.modelPrefix || '',
             });
 
             await dataset.load();

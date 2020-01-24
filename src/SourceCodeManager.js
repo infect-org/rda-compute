@@ -3,6 +3,7 @@ import HTTP2Client from '@distributed-systems/http2-client';
 import logd from 'logd';
 import path from 'path';
 import MainModule from './MainModule.js';
+import vm from 'vm';
 
 
 const log = logd.module('source-code-manager');
@@ -29,12 +30,34 @@ export default class SourceCodeManager {
 
 
 
+
+    /**
+     * set up a context to use in the module. u
+     *
+     * @param      {object}   referencingModule  The referencing module
+     */
+    async createContext() {
+        if (!this.context) {
+            this.context = vm.createContext({
+                console,
+                process,
+            });
+        }
+
+        return this.context;
+    }
+
+
+
+
      /**
       * loads source code modules
       *
       * @param      {array}   moduleList  The module list
       */
     async loadSourceTextModules(moduleList) {
+        const context = await this.createContext();
+
         for (const moduleItem of moduleList) {
             let moduleInstance;
             const specifier = path.join(this.rootPath, moduleItem.specifier);
@@ -44,6 +67,7 @@ export default class SourceCodeManager {
                 moduleInstance = new Module({
                     sourceText: moduleItem.sourceText,
                     specifier,
+                    context,
                 });
             } catch (err) {
                 err.message = `Failed to load Script Source Module '${specifier}' from data source '${this.dataSourceName}': ${err.message}`;
@@ -81,6 +105,7 @@ export default class SourceCodeManager {
         const mainModule = new MainModule({
             specifier:localSpecifier,
             importName: specifier,
+            context: await this.createContext(),
         });
 
         this.registerModule(localSpecifier, mainModule);

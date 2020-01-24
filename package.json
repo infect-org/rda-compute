@@ -25,14 +25,17 @@
   "homepage": "https://github.com/infect-org/rda-compute-service#readme",
   "devDependencies": {
     "@distributed-systems/http2-client": "^2.1.0",
+    "@infect/rda-cluster-service": "^3.0.0",
     "@infect/rda-service-manager": "^2.0.4",
+    "@infect/rda-service-registry": "^3.0.0",
     "@infect/rda-service-registry-client": "^2.1.1",
     "@rainbow-industries/rainbow-config": "^1.0.1",
+    "@infect/infect-rda-sample-storage": "^4.0.0",
+    "@infect/rda-fixtures": "^4.0.0",
     "section-tests": "^2.2.4"
   },
   "dependencies": {
-    "@infect/rda-fixtures": "^4.0.0",
-    "@infect/rda-service": "^4.0.4",
+    "@infect/rda-service": "^5.0.0",
     "ee-log": "^3.0.6",
     "ee-types": "^2.1.4",
     "envr": "^2.1.4",

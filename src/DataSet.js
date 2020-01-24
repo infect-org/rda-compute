@@ -32,11 +32,13 @@ export default class DataSet {
         minFreeMemory = 25,
         registryClient,
         dataSetIdentifier,
+        modelPrefix,
     }) {
         this.dataSetIdentifier = dataSetIdentifier;
         this.shardIdentifier = shardIdentifier;
         this.dataSource = dataSource;
         this.registryClient = registryClient;
+        this.modelPrefix = modelPrefix || '';
 
         // the amount of memory that must be available
         // in order to assume the process is healthy and
@@ -108,6 +110,7 @@ export default class DataSet {
 
 
     async load() {
+        const modelName = `${this.modelPrefix}Model.js`
 
         // change status to loading
         this.prepareForData();
@@ -118,12 +121,12 @@ export default class DataSet {
         // get source from storage service
         await this.sourceCodeManager.load(this.dataSourceHost, this.dataSource, this.dataSetIdentifier);
 
-        if (!this.sourceCodeManager.hasModule('InfectModel.js')) {
-            throw new Error(`Missing source file 'InfectModel.js'!`);
+        if (!this.sourceCodeManager.hasModule(modelName)) {
+            throw new Error(`Missing source file '${modelName}'!`);
         }
 
         // set up the constructor for the model that holds the data
-        this.ModelConstructor = await this.sourceCodeManager.runModule('InfectModel.js');
+        this.ModelConstructor = await this.sourceCodeManager.runModule(modelName);
 
         // start loading data, don't wait for this to finish, since it may take
         // a pretty long time
@@ -138,7 +141,7 @@ export default class DataSet {
 
 
 
-    async runReducer(functionName, dataSets) {
+    async runReducer(functionName, dataSets, options) {
         if (!this.reducers.has(functionName)) {
             const Reducer = await this.importSourceFile(`${functionName}Reducer.js`);
             const reducer = new Reducer();
@@ -147,7 +150,7 @@ export default class DataSet {
         }
 
         const reducer = this.reducers.get(functionName);
-        return await reducer.compute(dataSets);
+        return await reducer.compute(dataSets, options);
     }
 
 

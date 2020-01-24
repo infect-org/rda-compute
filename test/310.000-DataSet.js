@@ -19,8 +19,8 @@ section('Data Set', (section) => {
             args: '--dev.testing --log-level=error+ --log-module=*'.split(' ')
         });
         
-        await sm.startServices('rda-service-registry');
-        await sm.startServices('infect-rda-sample-storage');
+        await sm.startServices('@infect/rda-service-registry');
+        await sm.startServices('@infect/infect-rda-sample-storage');
     });
 
 
@@ -41,6 +41,7 @@ section('Data Set', (section) => {
             dataSource: 'infect-rda-sample-storage',
             registryClient,
             dataSetIdentifier: fixturesDataSet.dataSetId,
+            modelPrefix: 'Infect',
         });
 
         await dataset.initialize();

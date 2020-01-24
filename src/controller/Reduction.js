@@ -65,11 +65,17 @@ export default class ReductionController extends Controller {
                 };
             }));
 
+            let filteringDuration = 0;
+            for (const dataSet of dataSets) {
+                filteringDuration += dataSet.mappingResults.timings.filtering;
+            }
+
             const mapperDuration = process.hrtime.bigint()-mapperStart;
-            const result = await dataSet.runReducer(data.functionName, dataSets);
+            const result = await dataSet.runReducer(data.functionName, dataSets, data.options);
 
             if (result.timings) {
-                result.timings.filtering = Number(mapperDuration)/1000000;
+                result.timings.mapping = Number(mapperDuration)/1000000;
+                result.timings.filtering = filteringDuration;
                 result.timings.total = Number(process.hrtime.bigint() - mapperStart)/1000000;
             }
 

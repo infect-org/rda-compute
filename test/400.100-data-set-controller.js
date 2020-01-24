@@ -22,8 +22,8 @@ section('Data Set Controller', (section) => {
             args: '--dev.testing --log-level=error+ --log-module=*'.split(' ')
         });
         
-        await sm.startServices('rda-service-registry');
-        await sm.startServices('infect-rda-sample-storage', 'rda-cluster');
+        await sm.startServices('@infect/rda-service-registry');
+        await sm.startServices('@infect/infect-rda-sample-storage', '@infect/rda-cluster');
 
 
         // add fixtures

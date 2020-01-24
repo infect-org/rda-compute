@@ -28,6 +28,7 @@ export default class DataSetManager {
         dataSource,
         shardIdentifier,
         dataSetIdentifier,
+        modelPrefix,
     }) {
         if (this.hasDataSet(dataSetIdentifier)) {
             throw new Error(`Canont load dataSet '${dataSetIdentifier}', it was already laoded before!`);
@@ -38,6 +39,7 @@ export default class DataSetManager {
             registryClient: this.registryClient,
             shardIdentifier,
             dataSetIdentifier,
+            modelPrefix,
         });
 
         this.dataSets.set(dataSetIdentifier, dataSet);

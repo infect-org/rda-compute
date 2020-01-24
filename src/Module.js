@@ -16,32 +16,13 @@ export default class Module {
     constructor({
         sourceText,
         specifier,
+        context,
     }) {
         this.specifier = specifier;
         this.sourceText = sourceText;
+        this.context = context
     }
 
-
-
-
-    /**
-     * set up a context to use in the module. uses the context of the 
-     * referencing module if present
-     *
-     * @param      {object}   referencingModule  The referencing module
-     */
-    async createContext(referencingModule) {
-        if (referencingModule) {
-            this.context = referencingModule.context;
-        } else {
-            this.context = vm.createContext({
-                console,
-                process,
-            });
-        }
-
-        return this.context;
-    }
 
 
 
@@ -76,18 +57,13 @@ export default class Module {
     /**
      * load an es module, prepare it for execution
      *
-     * @param      {object}   referencingModule  The referencing module
      */
-    async load(referencingModule) {
+    async load() {
         if (this.module) return this.module;
-
-        // get a context. if the module is loaded from another, the
-        // context of the other module is used
-        const context = await this.createContext(referencingModule);
 
         // compile the module
         const stModule = this.module = new vm.SourceTextModule(this.sourceText, {
-            context: context,
+            context: this.context,
         });
 
         // store a reference to self so that we can resolve modules correctly

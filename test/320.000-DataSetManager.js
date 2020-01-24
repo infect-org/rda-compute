@@ -19,8 +19,8 @@ section('Data Set Manager', (section) => {
             args: '--dev.testing --log-level=error+ --log-module=*'.split(' ')
         });
         
-        await sm.startServices('rda-service-registry');
-        await sm.startServices('infect-rda-sample-storage');
+        await sm.startServices('@infect/rda-service-registry');
+        await sm.startServices('@infect/infect-rda-sample-storage');
     });
 
 
@@ -45,6 +45,7 @@ section('Data Set Manager', (section) => {
             dataSource: 'infect-rda-sample-storage',
             shardIdentifier,
             dataSetIdentifier: fixturesDataSet.dataSetId,
+            modelPrefix: 'Infect',
         });
 
         await dataset.load();

@@ -52,10 +52,20 @@ export default class ReductionController extends Controller {
 
             // collect the data from all shards
             const mapperStart = process.hrtime.bigint();
+            let filterParameters = {};
+
+            if (data.parameters && data.parameters.length) {
+                try {
+                    filterParameters = JSON.parse(data.parameters.length);
+                } catch (err) {
+                    return request.response().status(400).send(`Failed to parse parameters: ${err.message}`);
+                }
+            }
+
             const dataSets = await Promise.all(data.shards.map(async (shard) => {
-                const res = await this.httpClient.post(`${shard.url}/rda-compute.mapping`).send({
+                const res = await this.httpClient.post(`${shard.url}/rda-compute.mapping`).expect(201).send({
                     functionName: data.functionName,
-                    parameters: data.parameters,
+                    parameters: filterParameters,
                     dataSetIdentifier: data.dataSetIdentifier,
                 });
 

@@ -1,3 +1,3 @@
 
 service-registry:
-    host: http://l.dns.porn:9000
+    host: ${SERVICE_REGISTRY_HOST}

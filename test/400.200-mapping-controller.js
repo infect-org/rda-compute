@@ -23,7 +23,7 @@ section('Mapping Controller', (section) => {
         });
         
         await sm.startServices('@infect/rda-service-registry');
-        await sm.startServices('@infect/infect-rda-sample-storage', '@infect/rda-cluster');
+        await sm.startServices('@infect/infect-rda-sample-storage', '@infect/rda-cluster-service');
 
 
         // add fixtures
@@ -46,6 +46,7 @@ section('Mapping Controller', (section) => {
             dataSource: 'infect-rda-sample-storage',
             shardIdentifier,
             dataSetIdentifier,
+            modelPrefix: 'Infect',
         });
 
         while (true) {

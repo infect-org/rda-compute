@@ -37,6 +37,7 @@ export default class MappingController extends Controller {
             }
 
             const dataSet = this.dataSetManager.getDataSet(data.dataSetIdentifier);
+
             return await dataSet.runMapper(data.functionName, data.parameters);
         }
     }

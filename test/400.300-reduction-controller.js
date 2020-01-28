@@ -60,7 +60,7 @@ section('Reducing Controller', (section) => {
         const response = await client.post(`${host}:${service.getPort()}/rda-compute.reduction`).expect(201).send({
             dataSetIdentifier,
             functionName: 'Infect',
-            parameters: {},
+            parameters: '{}',
             shards: [{
                 url: `${host}:${service.getPort()}`
             }]
@@ -72,6 +72,19 @@ section('Reducing Controller', (section) => {
         assert.equal(data.counters.filteredModelCount, 0);
         assert.equal(data.counters.invalidModelCount, 0);
         assert.equal(data.counters.totalModelCount, 100);
+
+
+        section.notice('reduction 2');
+        const response2 = await client.post(`${host}:${service.getPort()}/rda-compute.reduction`).expect(201).send({
+            dataSetIdentifier,
+            functionName: 'Infect',
+            parameters: '{"regionIds: [1,2,3,4,5,6,7,8,9]"}',
+            shards: [{
+                url: `${host}:${service.getPort()}`
+            }]
+        });
+
+        const data2 = await response.getData();
 
         await section.wait(200);
         await service.end();

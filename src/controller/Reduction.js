@@ -56,7 +56,7 @@ export default class ReductionController extends Controller {
 
             if (data.parameters && data.parameters.length) {
                 try {
-                    filterParameters = JSON.parse(data.parameters.length);
+                    filterParameters = JSON.parse(data.parameters);
                 } catch (err) {
                     return request.response().status(400).send(`Failed to parse parameters: ${err.message}`);
                 }

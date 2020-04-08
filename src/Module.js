@@ -82,6 +82,12 @@ export default class Module {
      * @return     {Promise}  { description_of_the_return_value }
      */
     async evaluate() {
+        
+        // the node vm module api is still unstable. the method must be executed when present ...
+        if (this.module.instantiate) {
+            this.module.instantiate();
+        }
+
         const { result } = await this.module.evaluate();
         return result;
     }

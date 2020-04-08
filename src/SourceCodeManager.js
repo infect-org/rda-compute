@@ -103,7 +103,7 @@ export default class SourceCodeManager {
         const localSpecifier = `main-module-for-specifier-${specifier}`;
 
         const mainModule = new MainModule({
-            specifier:localSpecifier,
+            specifier: localSpecifier,
             importName: specifier,
             context: await this.createContext(),
         });

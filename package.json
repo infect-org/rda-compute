@@ -32,6 +32,7 @@
     "@infect/rda-service-registry": "^3.0.3",
     "@infect/rda-service-registry-client": "^2.1.2",
     "@rainbow-industries/rainbow-config": "^1.0.2",
+    "csv-parse": "^4.8.8",
     "section-tests": "^2.2.4"
   },
   "dependencies": {

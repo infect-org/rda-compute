@@ -78,7 +78,7 @@ section('Reducing Controller', (section) => {
         const response2 = await client.post(`${host}:${service.getPort()}/rda-compute.reduction`).expect(201).send({
             dataSetIdentifier,
             functionName: 'Infect',
-            parameters: '{"regionIds: [1,2,3,4,5,6,7,8,9]"}',
+            parameters: '{"regionIds": [1,2,3,4,5,6,7,8,9]}',
             shards: [{
                 url: `${host}:${service.getPort()}`
             }]

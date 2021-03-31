@@ -141,7 +141,12 @@ export default class DataSet {
 
 
 
-    async runReducer(functionName, dataSets, options) {
+    async runReducer({
+        functionName,
+        dataSets,
+        options,
+        subRoutines,
+    }) {
         if (!this.reducers.has(functionName)) {
             const Reducer = await this.importSourceFile(`${functionName}Reducer.js`);
             const reducer = new Reducer();
@@ -150,13 +155,13 @@ export default class DataSet {
         }
 
         const reducer = this.reducers.get(functionName);
-        return await reducer.compute(dataSets, options);
+        return await reducer.compute({ dataSets, options, subRoutines });
     }
 
 
 
 
-    async runMapper(functionName, filterConfiguration) {
+    async runMapper(functionName, filterConfiguration, subRoutines) {
         if (!this.mappers.has(functionName)) {
             const Mapper = await this.importSourceFile(`${functionName}Mapper.js`);
             const mapper = new Mapper();
@@ -168,7 +173,7 @@ export default class DataSet {
         const mapper = this.mappers.get(functionName);
         const models = this.getValues();
 
-        return await mapper.compute({ models, filterConfiguration });
+        return await mapper.compute({ models, filterConfiguration, subRoutines });
     }
 
 

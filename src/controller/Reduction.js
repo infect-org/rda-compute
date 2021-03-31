@@ -62,10 +62,19 @@ export default class ReductionController extends Controller {
                 }
             }
 
+            let subRoutines;
+
+            try {
+                subRoutines = JSON.parse(data.subRoutines);
+            } catch (e) {
+                subRoutines = [];
+            }
+
             const dataSets = await Promise.all(data.shards.map(async (shard) => {
                 const res = await this.httpClient.post(`${shard.url}/rda-compute.mapping`).expect(201).send({
                     functionName: data.functionName,
                     parameters: filterParameters,
+                    subRoutines,
                     dataSetIdentifier: data.dataSetIdentifier,
                 });
 
@@ -75,13 +84,22 @@ export default class ReductionController extends Controller {
                 };
             }));
 
+
             let filteringDuration = 0;
             for (const dataSet of dataSets) {
                 filteringDuration += dataSet.mappingResults.timings.filtering;
             }
 
             const mapperDuration = process.hrtime.bigint()-mapperStart;
-            const result = await dataSet.runReducer(data.functionName, dataSets, data.options);
+            const result = await dataSet.runReducer({
+                functionName: data.functionName,
+                dataSets,
+                options: data.options,
+                subRoutines,
+            }).catch((err) => {
+                log.error(err);
+                throw err;
+            });
 
             if (result.timings) {
                 result.timings.mapping = Number(mapperDuration)/1000000;

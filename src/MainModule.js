@@ -11,7 +11,7 @@ export default class MainModule extends Module {
         super({
             specifier,
             context,
-            sourceText:  `import MainModule from '${importName}';\nMainModule`,
+            sourceText:  `import MainModule from '${importName}';\nexport default MainModule;`,
         });
     }
 }

@@ -88,7 +88,8 @@ export default class Module {
             this.module.instantiate();
         }
 
-        const { result } = await this.module.evaluate();
-        return result;
+        await this.module.evaluate();
+
+        return this.module.namespace.default;
     }
 }

@@ -106,7 +106,8 @@ export default class DataSetController extends Controller {
                 request.response().status(409).send({
                     status: dataSet.getCurrentStatusName(),
                     recordCount: dataSet.getRecordCount(),
-                    err: dataSet.err,
+                    err: dataSet.err.message,
+                    stack: dataSet.err.stack,
                 });
                 break;
 
